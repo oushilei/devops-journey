@@ -79,7 +79,7 @@
 
 ### A 组
 
-**1.** kubeadm **v1.23.6**；master `192.168.2.133`，node1 `192.168.2.150`；
+**1.** kubeadm **v1.23.6**；master `192.168.245.133`，node1 `192.168.245.150`；
 容器运行时 **Docker 26.1.4**（不是 containerd）。
 
 **2.** `kube-flannel-ds`，在 **`kube-flannel`** 命名空间。
