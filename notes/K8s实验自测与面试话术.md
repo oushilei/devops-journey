@@ -367,3 +367,48 @@ etcd 用 **Raft 一致性协议**，写入必须获得**多数派（quorum）**�
 
 这也补上了 B15 题的最后一块拼图：单主集群最危险的地方 =
 「etcd 是单点」+「健康检查机制同时失效」。
+
+---
+
+## 2026-10-19 补充：NAT 迁移后集群重建（离线恢复全链路）
+
+### 事故经过（一句话版）
+
+VMware 桥接网络依赖物理网卡混杂模式，换 WiFi 后失效 → 两 VM 失联 → 挂起恢复时
+**节点无 NTP、时钟漂移** → apiserver 证书 TLS 校验失败 → 控制面周期性崩溃。
+修好网络后集群已病危，只能重建：kubeadm reset → 换个网段（192.168.245.x）init → 加回 node1。
+
+### 四个可复用经验
+
+1. **桥接 vs NAT 的适用边界**：bridged 让 VM 像"局域网里的一台真机"，但 WiFi
+   网卡不支持混杂模式，所以桥接天然不适用于无线环境；NAT 借宿主上网，与物理
+   链路解耦，迁移环境永远可用。**面试可答"虚拟网络模式选择与物理介质的关系"**。
+
+2. **挂起/恢复虚拟机必须配 NTP**：VM 挂起期间时钟停走，恢复后无 NTP 同步就会
+   漂移；TLS 证书校验卡的是"当前时间在 NotBefore/NotAfter 之间"，漂移几分钟
+   照样能让控制面全崩。**chronyd + ntp.aliyun.com 是虚拟机标配**。
+
+3. **镜像名不匹配 ≠ 拉不到，可以 docker tag 本地复用**：node1 缓存的是
+   `registry.aliyuncs.com/google_containers/kube-proxy:v1.23.17`，而 addon 要的是
+   `registry.k8s.io/kube-proxy:v1.23.17`——`docker tag` 一打，零流量复用。
+   **面试可答"镜像仓库镜像/加速器的实际原理"**。
+
+4. **kubeadm join 没有 --image-repository flag**（v1.23 实测报 unknown flag）；
+   换镜像仓库要靠 init 时指定或 ClusterConfiguration，join 阶段只能靠
+   `--ignore-preflight-errors=ImagePull` + 本地 tag。**细节准确性是面试加分项**。
+
+### kubeadm init 国内离线参数（本次实战验证）
+
+```bash
+# 镜像名对齐本地缓存，跳过 registry.k8s.io 直连；
+# pod-network-cidr 必须与 flannel net-conf 的 Network 一致；
+# apiserver-advertise-address 写新网段地址
+kubeadm init \
+  --image-repository registry.aliyuncs.com/google_containers \
+  --kubernetes-version=v1.23.17 \
+  --pod-network-cidr=10.244.0.0/16 \
+  --apiserver-advertise-address=192.168.245.133 \
+  --ignore-preflight-errors=ImagePull
+```
+
+flannel manifest（v0.28.9，与镜像缓存对齐）归档在本仓库 `k8s/kube-flannel.yml`。
