@@ -23,14 +23,25 @@
 
 ## 三、关键概念（D1 开讲，五段式）
 
-- 它解决什么问题：Jenkins 的配置漂移、插件地狱、job 散落各处
-- 为什么需要它：流水线即代码（pipeline as code），与代码同仓同版本同评审
+> ⚠️ 本节 2026-10-21 夜已修正，原文错误表述见文末「修正记录」，勿照原文复习。
+
+- **先立边界**：Jenkins + Jenkinsfile **也是**流水线即代码（Week 2 已实操验证）。PaC 不是 GitLab CI 的差异点，把它当差异点是常见教程谬误
+- 真差异只有三条：① 表达力——Groovy 程序（图灵完备）vs 声明式 YAML（有限关键字，哲学差异非代差）；② 系统边界——Jenkins 的 CI 与仓库是两个系统，靠 poll SCM / webhook 桥接（Week 2 配过 H/5），GitLab 的 CI 内生于仓库平台，push 是内部事件；③ 服务端残留配置——Jenkins 的 credentials/工具/节点、GitLab 的 CI/CD Variables 都在仓库外，完全"全在仓库"的 CI 不存在
 - 怎么工作：`.gitlab-ci.yml` → Runner 认领 job → executor 执行 → 结果回传 GitLab
-- 代价/局限：gitlab.com 免费 CI 分钟额度、Runner 机器要常开、YAML 表达力边界
-- 面试怎么答：先讲"为什么声明式"，再讲四要素，最后主动对比 Jenkins
+- 代价/局限：Runner 机器要常开（关机 = CI 停摆）；YAML 表达力有边界；gitlab.com 国内网络不稳（注册/拉代码走代理）
+- 面试怎么答：**禁止**说"Jenkins 配置漂移/插件地狱所以换 GitLab"（一句"你们没用 Jenkinsfile 吗"即被追问穿）。标准答法见「修正记录」第 3 条
 
 ## 四、环境备注
 
 - 家里网络走 nano 代理（127.0.0.1:65532）；gitlab.com 注册/Runner 注册若失败先查代理是否在跑（`netstat -ano | grep 65532`）
 - Runner 装宿主机（Windows, shell executor）；D3 需要 docker build 时再评估是否挪到 master VM
 - 断更问责：10/20、10/21 无提交（断更 2 天），纪律恢复起点 = 本文件 + 10/22 任务包
+
+---
+
+## 修正记录（2026-10-21 夜，用户当面抓出，保留示众）
+
+1. **错误原文**："它解决什么问题：Jenkins 的配置漂移、插件地狱、job 散落" / "为什么需要它：流水线即代码"——把 GitLab CI 的平台特性讲成了 Jenkins 的缺陷。
+2. **错因**：PaC 不是 GitLab CI 差异点。Jenkins 2.0（2016）起 Pipeline as Code 即核心能力，用户 Week 2 已用 Jenkinsfile 实操验证。教程谬误来源：Jenkins 旧形象停留在 FreeStyle 时代，被营销话术继承。
+3. **面试标准答法（修正版）**："两者都支持流水线即代码，我用 Jenkins + Jenkinsfile 落地过。差异在架构和表达力：Jenkins 是独立 CI 系统，靠 webhook 或轮询与仓库桥接，Jenkinsfile 用 Groovy 表达力强但需要代码规范兜底；GitLab CI 内生于代码平台，声明式 YAML 和 MR 深度集成，触发走 git 事件零延迟。选型看团队形态：编排复杂、有平台团队维护选 Jenkins；小团队要低总拥有成本选 GitLab CI。"
+4. **方法论教训**：讲任何对比前，先核对对方的实操基线（用户 Week 2 笔记明写"弃 FreeStyle 选 Jenkinsfile"），再决定哪些"痛点"对对方真实存在。把推断当事实 = 信任赤字。
