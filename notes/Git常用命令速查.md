@@ -208,7 +208,7 @@ git commit -m "说明这次改了什么"
 git push
 ```
 
-这个循环会重复几百次。**commit message 要认真写**——面试官会看你的提交历史。
+这个循环会重复几百次。**commit message 要认真写**——评审方会看你的提交历史。
 
 ### commit message 的约定写法
 

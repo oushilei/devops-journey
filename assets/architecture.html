@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1240px;
+    background: #ffffff;
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    color: #1a1a1a;
+    padding: 40px 44px 36px;
+  }
+  h1 { font-size: 30px; font-weight: 600; letter-spacing: .5px; }
+  .sub { margin-top: 8px; font-size: 14px; color: #6b7280; }
+  .rule { height: 1px; background: #e8e8e8; margin: 18px 0 22px; }
+
+  .layer { margin-bottom: 0; }
+  .label { font-size: 12px; color: #9aa0a6; letter-spacing: 1px; margin-bottom: 7px; }
+
+  .card {
+    border: 1px solid #d8dde3; border-radius: 10px; background: #fafbfc;
+    padding: 14px 18px;
+  }
+  .card .t { font-size: 15px; font-weight: 600; }
+  .card .d { font-size: 12.5px; color: #5f6b7a; margin-top: 5px; line-height: 1.6; }
+
+  .row { display: flex; gap: 16px; }
+  .row > * { flex: 1; }
+
+  .dev { background: #f4f5f7; border-color: #cfd4da; }
+  .repo { background: #f3f7fc; border-color: #bdd2e8; }
+  .repo .t { color: #1f3a5f; }
+  .ci { background: #eef6f3; border-color: #a8d5c4; }
+  .ci .t { color: #0d5c46; }
+  .art { background: #fdf6ec; border-color: #e8cfa8; }
+  .art .t { color: #7a4a10; }
+  .k8s { background: #eef2fb; border-color: #b3c3e8; }
+  .k8s .t { color: #1c2f63; }
+  .user { background: #f4f5f7; border-color: #cfd4da; }
+
+  .stages { display: flex; gap: 10px; margin-top: 12px; }
+  .stage {
+    flex: 1; text-align: center; font-size: 13px; padding: 9px 4px;
+    border-radius: 7px; background: #ffffff; border: 1px solid #a8d5c4; color: #0d5c46;
+  }
+  .stage.manual { border-style: dashed; background: #fffdf7; border-color: #d9b370; color: #7a4a10; }
+  .stage small { display: block; font-size: 10.5px; color: #7c8a96; margin-top: 3px; }
+
+  .arrow { text-align: center; color: #9aa0a6; font-size: 15px; line-height: 1; padding: 9px 0; }
+
+  .cluster { border: 1.5px solid #b3c3e8; border-radius: 12px; background: #f6f8fd; padding: 14px 16px 16px; }
+  .cluster-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .cluster-head .t { font-size: 15px; font-weight: 600; color: #1c2f63; }
+  .cluster-head .d { font-size: 12px; color: #6b7a90; }
+
+  .nodes { display: flex; gap: 14px; }
+  .node { flex: 1; border: 1px solid #cbd6ea; border-radius: 9px; background: #ffffff; padding: 12px 14px; }
+  .node .nt { font-size: 13.5px; font-weight: 600; color: #1c2f63; }
+  .node .nd { font-size: 12px; color: #6b7a90; margin-top: 4px; }
+
+  .pods { display: flex; gap: 8px; margin-top: 10px; }
+  .pod {
+    flex: 1; border: 1px solid #a8d5c4; background: #eef6f3; border-radius: 7px;
+    padding: 8px 10px; font-size: 11.5px; color: #0d5c46; text-align: center;
+  }
+  .pod b { display: block; font-size: 12.5px; }
+
+  .svc {
+    margin-top: 10px; border: 1px dashed #8fa8d4; border-radius: 7px; background: #f2f6fd;
+    padding: 9px 12px; font-size: 12.5px; color: #1c2f63; display: flex; justify-content: space-between;
+  }
+
+  .caps { display: flex; gap: 12px; margin-top: 4px; }
+  .cap {
+    flex: 1; border: 1px solid #e2e6ea; border-radius: 8px; background: #fbfbfc;
+    padding: 11px 13px; font-size: 12px; color: #4b5563; line-height: 1.5;
+  }
+  .cap b { display: block; font-size: 12.5px; color: #1a1a1a; margin-bottom: 3px; }
+  .foot { margin-top: 20px; font-size: 11.5px; color: #9aa0a6; text-align: right; }
+</style>
+</head>
+<body>
+
+  <h1>CI/CD 与容器化部署架构</h1>
+  <div class="sub">Docker 多阶段构建 · Jenkins · GitLab CI · Kubernetes｜个人实验环境（VMware 双节点，内网自建）</div>
+  <div class="rule"></div>
+
+  <div class="layer">
+    <div class="label">01　代码提交</div>
+    <div class="card dev">
+      <div class="t">开发者 · Windows 本地</div>
+      <div class="d">git commit → git push｜两个独立仓库，各自配置 origin 与凭据（公网走代理 / 内网直连）</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <div class="layer">
+    <div class="label">02　代码仓库</div>
+    <div class="row">
+      <div class="card repo">
+        <div class="t">GitHub · 笔记仓库</div>
+        <div class="d">devops-journey<br>笔记 / 周复盘 / 技术要点</div>
+      </div>
+      <div class="card repo">
+        <div class="t">自建 GitLab CE · 192.168.245.150</div>
+        <div class="d">devops/gitlab-ci-lab<br>应用代码 + .gitlab-ci.yml + scripts/ + k8s/</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓　push 触发（git 事件，非轮询）</div>
+
+  <div class="layer">
+    <div class="label">03　持续集成（两套流水线均已实机验证）</div>
+    <div class="row">
+      <div class="card ci">
+        <div class="t">GitLab CI · .gitlab-ci.yml</div>
+        <div class="stages">
+          <div class="stage">build<small>产物 + artifacts</small></div>
+          <div class="stage">test<small>单测门禁</small></div>
+          <div class="stage">package<small>docker build/push</small></div>
+          <div class="stage manual">deploy<small>manual 审批</small></div>
+        </div>
+      </div>
+      <div class="card ci" style="flex:0 0 300px">
+        <div class="t">Jenkins · Jenkinsfile</div>
+        <div class="d">容器化部署 + DooD（挂 docker.sock + 注入 CLI）<br>六语法：agent / environment / when / parallel / post / script</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <div class="layer">
+    <div class="label">04　执行与制品</div>
+    <div class="row">
+      <div class="card ci">
+        <div class="t">GitLab Runner · shell executor</div>
+        <div class="d">concurrent = 2（实测：1 时同 stage 排队 57s → 2 时并行 28s）</div>
+      </div>
+      <div class="card art">
+        <div class="t">私有镜像仓库 · :5000</div>
+        <div class="d">hello:&lt;commit-sha&gt; + latest<br>制品不可变：同名 tag 已存在则跳过推送</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓　kubectl set image / rollout status</div>
+
+  <div class="layer">
+    <div class="label">05　容器编排</div>
+    <div class="cluster">
+      <div class="cluster-head">
+        <div class="t">Kubernetes 集群 · kubeadm v1.23 · flannel vxlan</div>
+        <div class="d">master 带 NoSchedule taint，业务 Pod 只调度到 worker</div>
+      </div>
+      <div class="nodes">
+        <div class="node" style="flex:0 0 260px">
+          <div class="nt">k8s-master · .133</div>
+          <div class="nd">control-plane<br>etcd / apiserver / scheduler / controller-manager</div>
+        </div>
+        <div class="node">
+          <div class="nt">k8s-node1 · .150　工作负载</div>
+          <div class="nd">Deployment hello × 2 副本｜readiness + liveness 探针｜RollingUpdate（maxSurge 1 / maxUnavailable 0）</div>
+          <div class="pods">
+            <div class="pod"><b>Pod 1/1</b>10.244.1.x</div>
+            <div class="pod"><b>Pod 1/1</b>10.244.1.y</div>
+          </div>
+          <div class="svc">
+            <span>Service · NodePort</span>
+            <span>:30863 → 容器 80</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <div class="layer">
+    <div class="label">06　访问</div>
+    <div class="card user">
+      <div class="t">用户浏览器</div>
+      <div class="d">http://192.168.245.150:30863　→　Service 负载均衡到健康 Pod</div>
+    </div>
+  </div>
+
+  <div class="rule" style="margin:22px 0 18px"></div>
+
+  <div class="caps">
+    <div class="cap"><b>零停机滚动</b>2 副本 + maxUnavailable 0，发布期间服务不中断</div>
+    <div class="cap"><b>探针挡住坏版本</b>实测：坏镜像上线时新 Pod 卡 0/1，旧 Pod 继续服务，用户全程 200</div>
+    <div class="cap"><b>一键回滚</b>rollout undo / --to-revision，靠 ReplicaSet 历史毫秒级切回</div>
+    <div class="cap"><b>制品不可变</b>按 commit sha 打 tag，旧版本永久可追溯、可回滚</div>
+  </div>
+
+  <div class="foot">实测环境：VMware + CentOS 7 + Docker 26.1.4 + Kubernetes v1.23.17</div>
+
+</body>
+</html>

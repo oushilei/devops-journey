@@ -150,7 +150,7 @@ HTTP registry 必须在 `insecure-registries` 登记，否则 Docker 会尝试 H
 
 本质变化：**传统运维交付服务器，DevOps 运维交付"从代码到上线的通道"**。交付物变了，技能树必须变。
 
-## 九、面试话术
+## 九、技术要点
 
 > "CI 的最终产物是镜像：代码提交后自动 build，按 commit sha 打 tag 推到 registry，部署侧只认 sha tag，latest 只做展示。我做过 Runner 的部署与并发调优、私有 registry 搭建与认证、CI 变量权限隔离和发布回滚，所以既能写流水线，也能保证它在生产上不出事。"
 

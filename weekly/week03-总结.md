@@ -8,7 +8,7 @@
 | 开题目标 | 状态 | 证据 |
 |---|---|---|
 | `.gitlab-ci.yml` 跑通 | ✅ | build → test → package → deploy 四阶段全绿 |
-| 与 Jenkins 对比话术 | ✅ | `notes/Week3-Jenkins与GitLabCI对比.md` |
+| 与 Jenkins 对比表述 | ✅ | `notes/Week3-Jenkins与GitLabCI对比.md` |
 | 每日提交不断更 | ✅ | 10/22、10/23、10/24、10/25 每天至少 1 commit |
 
 ## 二、五天实际进度
@@ -21,7 +21,7 @@
 | D4 10/24 晚 | — | ✅ 最小生产版：四门禁（门禁/不可变/审批/回滚） |
 | D5 10/25 | 对比文 + 周复盘 + 自测 | ✅ 自测 10 题 + 对比文模板成稿 |
 
-## 三、关键实测数据（面试可直接引用）
+## 三、关键实测数据（技术问答可直接引用）
 
 | 指标 | 数据 |
 |---|---|
@@ -69,6 +69,6 @@
 
 ## 七、W4 方向
 
-按计划进入下一模块（K8s 部署 / 监控方向，具体以《技术转型计划-1003》为准）。D4 的回滚只在 Docker 层面，W4 应升级到 **K8s 层面**：Deployment + rollout undo + 滚动更新，把 CI 的最后一公里真正打通。
+下一模块：K8s 部署 / 监控方向。D4 的回滚只在 Docker 层面，W4 应升级到 **K8s 层面**：Deployment + rollout undo + 滚动更新，把 CI 的最后一公里真正打通。
 
 **下一步最小目标**：流水线 package 后自动 `kubectl set image` 部署到 master 集群，并用 `kubectl rollout undo` 完成回滚。

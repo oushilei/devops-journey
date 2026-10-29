@@ -1,8 +1,8 @@
-# DevOps 转型记录
+# DevOps 学习记录
 
-一个运维工程师向 **CI/CD + 云原生** 方向转型的完整学习记录。
+一个运维工程师在 **CI/CD + 云原生** 方向上的完整学习记录。
 
-这里不是教程合集，是我每天动手做实验、踩坑、复盘之后留下的原始笔记。
+这里不是教程合集，是每天动手做实验、踩坑、复盘之后留下的原始笔记。
 
 ---
 
@@ -25,38 +25,41 @@
 |---|---|---|---|
 | W1 | Docker | ✅ 完成 | 镜像 884MB → 14.1MB（缩小 62.7 倍）；compose 多容器编排；自定义网络服务发现 |
 | W2 | Jenkins | ✅ 完成 | DooD 容器内构建；Jenkinsfile 六大语法；凭据管理；参数化 + poll SCM 自动触发 |
-| W3 | GitLab CI | ⏳ 进行中 | `.gitlab-ci.yml` 与 Jenkins 对比 |
-| W4 | K8s 部署 | ⬜ 待开始 | Deployment / Service / Ingress / ConfigMap |
-| W5 | K8s 深化 | ⬜ 待开始 | 滚动更新 / 回滚 / 探针 |
-| W6 | Prometheus + Grafana | ⬜ 待开始 | 监控栈 + 告警规则 |
-| W7 | 全链路整合 | ⬜ 待开始 | 完整 CI/CD + 监控链路 |
+| W3 | GitLab CI | ✅ 完成 | 自建 GitLab CE + Runner；stages / rules / artifacts / cache 四实验；镜像构建与私有 registry；四道生产门禁（单测、制品不可变、manual 审批、一键回滚） |
+| W4 | K8s 部署 | ⏳ 进行中 | Deployment / Service / 探针 / 滚动更新 / rollout 回滚 |
+| W5 | Prometheus | ⬜ 待开始 | 监控栈 + 告警规则 |
+| W6 | 全链路整合 | ⬜ 待开始 | 完整 CI/CD + 监控链路 |
 
 ---
 
 ## 目录
 
-### `notes/` —— 技术笔记与面试话术
+### `notes/` —— 技术笔记
 
 | 文件 | 内容 |
 |---|---|
-| [Week1-面试话术](notes/Week1-面试话术.md) | 镜像优化 / 故障排查 / 容器网络，三段可复述的口述稿 |
+| [Week1-技术要点](notes/Week1-技术要点.md) | 镜像优化 / 故障排查 / 容器网络，三段可复述的技术表述 |
 | [Week1-Docker自测8题](notes/Week1-Docker自测8题.md) | 闭卷自测 + 批改 + 标准答案 |
 | [复习提纲-1005](notes/复习提纲-1005.md) | W1 复习材料 |
 | [Week2-Day2-第一条流水线-原理讲解](notes/Week2-Day2-第一条流水线-原理讲解.md) | DooD 原理：容器里的 Jenkins 如何操作宿主机 Docker |
 | [Week2-Day2-复习提纲](notes/Week2-Day2-复习提纲.md) | W2 Day2 自测 + 标准答案 |
 | [Week2-Day3-Jenkinsfile语法](notes/Week2-Day3-Jenkinsfile语法.md) | 六大语法点全部实机验证：agent / environment / when / parallel / post / script |
-| [Week2-面试话术](notes/Week2-面试话术.md) | 完整 CI 流水线 / DooD / 凭据管理 / 自动触发，四段话术 + 追问预案 |
-| [K8s实验自测与面试话术](notes/K8s实验自测与面试话术.md) | 主节点删除与重新加入实验记录 |
+| [Week2-技术要点](notes/Week2-技术要点.md) | 完整 CI 流水线 / DooD / 凭据管理 / 自动触发 |
+| [Week3-D1D2-GitLabCI实战与实测数据](notes/Week3-D1D2-GitLabCI实战与实测数据.md) | 自建 GitLab + 并发模型 + 四个实验的实测数据 |
+| [Week3-D3-镜像构建与registry](notes/Week3-D3-镜像构建与registry.md) | docker build / push / 双 tag / variables |
+| [Week3-D4-最小生产流水线](notes/Week3-D4-最小生产流水线.md) | 四道门禁的实现与实测 |
+| [Week3-Jenkins与GitLabCI对比](notes/Week3-Jenkins与GitLabCI对比.md) | 三个真实差异 + 各自短板 + 选型 |
+| [Week4-D3-回滚与ReplicaSet](notes/Week4-D3-回滚与ReplicaSet.md) | rollout undo / --to-revision / RS 编号重排机制 |
+| [K8s实验自测与要点](notes/K8s实验自测与要点.md) | 主节点删除与重新加入实验记录 |
 | [Git常用命令速查](notes/Git常用命令速查.md) | 日常命令 + 排错速查 |
 
-### `plan/` —— 学习计划
+### `k8s/` —— 集群清单
 
-| 文件 | 内容 |
-|---|---|
-| [技术转型计划-1003](plan/技术转型计划-1003.md) | 13 周路线图（最新版） |
-| [技术转型计划-1002](plan/技术转型计划-1002.md) | 项目驱动路线修订 |
-| [技术转型计划-0928修正](plan/技术转型计划-0928修正.md) | 初始版本 |
-| [回家执行手册](plan/回家执行手册.md) | 全职学习期的自我约束系统：作息、提交机制、退出红线 |
+kube-flannel manifest 归档（10-19 NAT 迁移后集群重建用）。
+
+### `assets/` —— 图示
+
+CI/CD 与容器化部署架构图。
 
 ### `weekly/` —— 周总结
 

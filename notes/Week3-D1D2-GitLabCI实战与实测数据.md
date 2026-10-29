@@ -10,7 +10,7 @@ gitlab.com 对新建账号强制**身份验证**才能跑流水线，而验证�
 
 改走自建：
 - 完全绕开验证墙，内网访问零代理依赖
-- 面试价值更高："装过、配过、注册过 Runner"
+- 技术问答价值更高："装过、配过、注册过 Runner"
 
 自建命令（node1，`memsize` 已从 4G 调到 6G）：
 
@@ -123,7 +123,7 @@ GitLab 变量作用域更宽，泄露面更大，靠 protected + masked 补偿�
 7. **受保护分支的 cache key 自动加 `-protected` 后缀**（GitLab 的隔离机制）
 8. **`kubeadm join` 没有 `--image-repository` flag**（v1.23 实测），镜像名不符要用 `docker tag` 本地改名复用
 
-## 八、面试话术
+## 八、技术要点
 
 > "我们用 Jenkins + Jenkinsfile 落地过流水线即代码，也踩过 DooD、poll SCM 这些细节。GitLab CI 的差异在于 CI 内生于代码平台：push 是内部事件不靠轮询，Runner 注册即用不需要独立 CI 服务器和插件维护。它的执行模型是 pull——Runner 主动向 GitLab 长轮询要活，原子锁保证不重复；并行度由 Runner 的 concurrent 和 limit 决定，实测 concurrent=1 时同 stage 的 job 会排队。artifacts 经 GitLab 中转保证跨机器可达，cache 存在 Runner 本地只做加速。"
 
