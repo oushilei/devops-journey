@@ -395,7 +395,181 @@ if [ "$CODE" != "200" ]; then ...
 
 ---
 
-## 八、技术要点（面试用）
+## 八、我的问题与答案
+
+> 这一节记录的是**我当晚提出的疑问**。标题保留了原话的口吻，但把模糊处改写成了可回答的技术问题——因为"听不懂"和"问错了"往往是一回事。
+> 凡是括号里标了「原话」的，是我当时的原始表述。
+
+### Q1：`revisionHistoryLimit` 触发清理时，被删的是哪一个 RS？判据是 revision 号还是创建时间？
+
+（原话：「为什么'少的那一行是 REV 10 或 11 中的一个'而不是确定某一个」）
+
+**这一问问到了要点，而且直接指出了当时的表述缺陷。**
+
+答案是**确定的，不存在"或"**：被删的是 **REV 10**。
+
+判据来自两个字段的排序差异：
+
+| REV | CREATED(UTC) | |
+|---|---|---|
+| **10** | 12:14:**24** | 编号最小，但创建时间**更晚** |
+| **11** | 12:14:**11** | 编号更大，但创建时间**更早** |
+
+- 按「revision 号升序，删最小」→ 删 REV 10 ✅ **实际发生**
+- 按「创建时间升序，删最老」→ 删 REV 11 ❌ 未发生
+
+→ **K8s 的清理按 revision 号排序，不按创建时间。**（详见 §2.3）
+
+**但更该记住的是分层**：
+
+| 层面 | 性质 | 能不能依赖 |
+|---|---|---|
+| **保留几个**（数量） | ✅ API 契约 | 可以，用于规划回滚窗口 |
+| **保留哪几个**（顺序） | ⚠️ 实现细节 | **不能**，跨版本可能变 |
+
+**所以生产上只按"数量"规划窗口，绝不写逻辑去赌"留下的是哪一个"。** 需要精确回到某版时，换通道用 registry 的 tag，不要靠 `undo`。
+
+> 附带一条自我修正：我当时说"或"是因为**没有验证过**，又不想说错。用"或"来兜底，本质是把推断伪装成事实。正确做法是给验证方式，或明说"我没验证"。
+
+---
+
+### Q2：RS 有 `revisionHistoryLimit` 限制，registry 里的镜像制品有对应的清理限制吗？
+
+**没有。而且这是刻意设计的结果。**
+
+实测本机 registry 的 `config.yml` 只有四段（log / storage / http / health），**没有任何 retention / gc 配置**；也没有 crontab 或 systemd timer 在清理。
+
+**为什么两边设计相反**：
+
+| | `revisionHistoryLimit`（K8s） | registry tag |
+|---|---|---|
+| 谁清理 | **K8s 自动**，默认留 10 | **没人自动清** |
+| 为什么 | RS 是内存中的 API 对象，无限堆积会压垮 etcd 和 controller | 制品是磁盘文件，**删了就是永久失去** |
+| 风险方向 | 留少了 → 回不去（可恢复） | 删多了 → **永远回不去**（不可恢复） |
+
+**关键**：`undo` 依赖的正是这些 tag。K8s 侧已经自动缩窗了，如果 registry 也自动清，**两个窗口同时收缩，就彻底没有退路**。所以业界共识是：registry 清理必须**显式、有人负责、可审计**。
+
+**清理的正确顺序（不能反）**：
+
+```bash
+# 1) 删 tag（只是让 tag 指向消失，blob 还在）
+curl -X DELETE http://<registry>/v2/<repo>/manifests/<digest>
+# 2) 回收 blob（这一步才真正释放磁盘）
+docker exec registry registry garbage-collect /etc/docker/registry/config.yml
+```
+
+只删 tag 不 GC → 磁盘一点不省；只 GC 不删 tag → 什么都不会删。
+
+`registry:2` 原生**没有** retention policy；要"保留最近 N 个 / 超过 30 天删除"这种策略，得换 **Harbor**（registry + 策略引擎 + 权限 + UI）。
+
+**这里有个真账要算**：registry 里还有 9 个 tag（69.4 MB），但 K8s 侧 limit=1 时只有 1 个版本可退。**"真回滚能力"取决于两个窗口的较小值，不是 tag 数量。**
+
+---
+
+### Q3：镜像 push 到 registry 之后，是什么机制让 CI 去发布它的？
+
+**没有任何"通知"机制。 push 不触发任何东西。**
+
+registry 是**被动存储**，它没有事件能力，不会告诉任何人"我这儿多了个镜像"。
+
+真正让两条线对齐的是**同一个变量**：
+
+```yaml
+package-job:  docker push $IMAGE:$CI_COMMIT_SHORT_SHA          # 推 :0e8dc0f4
+deploy-job:   kubectl set image ...=$IMAGE:$CI_COMMIT_SHORT_SHA # 用同一个 :0e8dc0f4
+```
+
+deploy-job **不需要问 registry"新镜像叫什么"**——它和 package-job 在同一个 pipeline 里，`$CI_COMMIT_SHORT_SHA` 是同一个值，**名字是算出来的，不是查出来的**。
+
+> 这也是为什么必须用 sha tag 而不是 `latest`：用 `latest` 的话，deploy **无法知道**这次推的是哪个制品，只能靠"tag 被覆盖了"碰运气。
+
+**"触发"这件事发生在更早一步**：`git push` 触发 CI，因为 **GitLab 既是 Git 服务器又是 CI 调度器**，push 事件是它自己产生的。
+
+> 对比 Jenkins：它不是 Git 服务器，所以必须配 **webhook** 让 GitLab 主动"打电话"，否则只能**轮询**（定时问"有新提交吗"）。这是 GitLab CI 天生比 Jenkins 少一层的原因。
+
+**之后 Pod 怎么真的跑起来**：`set image` 只改 etcd 里的 spec → Deployment Controller 建新 RS → RS 建 Pod → 节点上的 **kubelet** 按 `imagePullPolicy` 去 registry 拉 → 最终锁定的是 **digest**，不是 tag。
+
+---
+
+### Q4：从开发写代码到上生产环境，中间经历哪些阶段、各用什么、它们怎么工作？
+
+见 §7 的七段链路表。**每段的产出物才是重点**：
+
+| # | 阶段 | 产出 | 这一层在解决上一层的什么失败模式 |
+|---|---|---|---|
+| ① | 代码提交 | commit（唯一 sha） | 改动无记录、无法回退 |
+| ② | 构建测试 | 测试报告 | 代码能跑但逻辑错 |
+| ③ | 镜像打包 | 镜像（tag=sha） | 开发机跑通、服务器跑不通 |
+| ④ | 制品存储 | registry 里的不可变 tag | 部署时找不到当时那个版本 |
+| ⑤ | 部署编排 | Pod / RS / revision | 进程挂了没人管 |
+| ⑥ | 流量接入 | Ingress / Service | Pod 正常但用户连不上 |
+| ⑦ | 观测应急 | 日志/指标/告警 | 都正常但没人知道它在坏 |
+
+**主线**：这条链上每一层都在解决上一层的失败模式。所以真正的关键不是"自动化"，而是**每段产出都是不可变、可追溯、可回滚的**。
+
+---
+
+### Q5：正规生产环境里，这条链各阶段分别由谁负责？谁推镜像、谁发版？
+
+见下表的四个角色。**核心是互不越权**：
+
+| 阶段 | 责任人 | 谁批准 |
+|---|---|---|
+| 写代码 / MR | 开发工程师 | 技术负责人（Review ≥1 人） |
+| 构建 / 打 tag | **CI 系统**（无人值守） | 无人，全自动 |
+| 推镜像 | **CI 专用账号**（robot account） | 无人，但**人没有 push 权限** |
+| 部署测试环境 | CI 自动 | 测试验收 |
+| **发布生产** | **Release Manager / 值班运维** | 变更单 + 发布窗口 |
+
+**两个反直觉的点**：
+
+1. **开发不点发布按钮，运维不改业务代码。** 这是组织制衡，不是礼节——谁写代码谁批准上线，等于没有审批。
+2. **人不能推镜像，只有 CI 能推。** 生产 registry 只给 CI 一个 robot account，开发者账号只有 pull 权限。这样"镜像里跑的是什么"永远能追溯到某次构建，**不存在"某人偷偷手动推了个镜像"**。
+
+**为什么"必须由 CI 构建镜像"不是"为了方便"，而是"可追溯 + 不可绕过"**——手动推的镜像没有 commit 对应关系，出问题查不到源头。
+
+**其他生产细节**：
+- `latest` 基本被禁（会变 → **假回滚**），有的公司用准入控制器直接拦截 `image: xxx:latest`；
+- **数据库变更与代码发布是两条独立的线**：代码可随便回滚，DB 迁移不能（数据已写进去）。所以要求迁移脚本**向前兼容**（先加字段、后删字段，分两次发）；
+- 生产不是一次性全量，是**灰度**（5% → 25% → 50% → 100%）；
+- 发布有**窗口**（工作日白天、避开周五晚和节假日、大促封网）；
+- **回滚预案必须发布前就绪**（用哪条命令、回到哪个 tag、谁拍板），不是出事再想。
+
+---
+
+### Q6：`kubectl get rs` 的输出里看不到 revision，怎么显示？
+
+`kubectl get rs` 的默认列是固定的（NAME / DESIRED / CURRENT / READY / AGE）。**REV 不在默认列**，它存在注解 `deployment.kubernetes.io/revision` 里，必须显式要求：
+
+```bash
+kubectl get rs -o custom-columns='NAME:.metadata.name,REV:.metadata.annotations.deployment\.kubernetes\.io/revision,DESIRED:.spec.replicas'
+```
+
+**逐段拆解**：
+- `-o custom-columns=` → 不要默认表格，自己定义列
+- `NAME:.metadata.name` → 列名 `NAME`，值取 `.metadata.name`
+- `REV:.metadata.annotations.deployment\.kubernetes\.io/revision` → 注解名里的**点必须用 `\` 转义**
+
+> **坑**：custom-columns 的路径写错**不会报错，会静默丢列**。第一次写漏了转义，结果 `REV` 整个列消失，命令看起来"成功"了。
+
+---
+
+### Q7：为什么这次 `rollout undo` 成功了，而之前 `--to-revision=10` 会失败？
+
+**因为 `undo`（不带参数）是"退到上一个"，而"上一个"一定在历史里；`--to-revision=N` 是"跳到指定编号"，那个编号可能已经不存在。**
+
+| 命令 | 语义 | 失效条件 |
+|---|---|---|
+| `rollout undo` | 退到**上一个** revision | 历史为空（几乎不会） |
+| `rollout undo --to-revision=10` | 按**编号**跳转 | 该 RS 被 GC，**或编号被重排** |
+
+实测：limit=1 时保留了 1 个历史 RS，所以 `undo` 一定能成功一次；但退回后**编号会重排**（15 → 17），老编号 15 立刻失效，再想 `--to-revision=15` 就报 `unable to find`。
+
+→ 详见 §3.2、§3.3。**这就是"能退一步"和"能退到指定版本"的区别，也是必须做双通道回滚的原因。**
+
+---
+
+## 九、技术要点（面试用）
 
 > "回滚能力 = 副本为 0 的 RS 还剩几个，这个窗口由 `revisionHistoryLimit` 决定，而且会随发布次数持续缩小——limit=1 时每发一版就缩一格。清理是按 revision 号排的，不是按创建时间。
 >
@@ -407,7 +581,7 @@ if [ "$CODE" != "200" ]; then ...
 
 ---
 
-## 九、遗留
+## 十、遗留
 
 - [x] `revisionHistoryLimit` 实验（§2）
 - [x] K8s 回滚 vs 手写 `TARGET_TAG` 对比（§3.4）
@@ -419,7 +593,7 @@ if [ "$CODE" != "200" ]; then ...
 
 ---
 
-## 十、下次开局待办
+## 十一、下次开局待办
 
 1. 确认环境：`kubectl get nodes`（VM 重启后 1-3 分钟内 `connection refused` 是正常的，先看 `uptime`）
 2. 写 W4 周复盘
