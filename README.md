@@ -26,8 +26,8 @@
 | W1 | Docker | ✅ 完成 | 镜像 884MB → 14.1MB（缩小 62.7 倍）；compose 多容器编排；自定义网络服务发现 |
 | W2 | Jenkins | ✅ 完成 | DooD 容器内构建；Jenkinsfile 六大语法；凭据管理；参数化 + poll SCM 自动触发 |
 | W3 | GitLab CI | ✅ 完成 | 自建 GitLab CE + Runner；stages / rules / artifacts / cache 四实验；镜像构建与私有 registry；四道生产门禁（单测、制品不可变、manual 审批、一键回滚） |
-| W4 | K8s 部署 | ⏳ 进行中 | Deployment / Service / 探针 / 滚动更新 / rollout 回滚 |
-| W5 | Prometheus | ⬜ 待开始 | 监控栈 + 告警规则 |
+| W4 | K8s 部署 | ✅ 完成 | Deployment / Service / 探针（假滚动对照实测）/ 滚动更新 / 双通道回滚 / CI 操作 Deployment（受限 SA） |
+| W5 | Prometheus | ⏳ 进行中 | 监控栈 + 告警规则 |
 | W6 | 全链路整合 | ⬜ 待开始 | 完整 CI/CD + 监控链路 |
 
 ---
@@ -50,6 +50,7 @@
 | [Week3-D4-最小生产流水线](notes/Week3-D4-最小生产流水线.md) | 四道门禁的实现与实测 |
 | [Week3-Jenkins与GitLabCI对比](notes/Week3-Jenkins与GitLabCI对比.md) | 三个真实差异 + 各自短板 + 选型 |
 | [Week4-D3-回滚与ReplicaSet](notes/Week4-D3-回滚与ReplicaSet.md) | rollout undo / --to-revision / RS 编号重排机制 |
+| [Week4-D4-回滚窗口与CI部署K8s](notes/Week4-D4-回滚窗口与CI部署K8s.md) | 回滚窗口实测 / 双通道回滚 / 坏镜像探针拦截 / 三个 CI 真实故障 |
 | [K8s实验自测与要点](notes/K8s实验自测与要点.md) | 主节点删除与重新加入实验记录 |
 | [Git常用命令速查](notes/Git常用命令速查.md) | 日常命令 + 排错速查 |
 
@@ -64,6 +65,12 @@ CI/CD 与容器化部署架构图。
 ### `weekly/` —— 周总结
 
 按周沉淀「做了什么 / 遇到什么问题 / 怎么解决的」。
+
+| 文件 | 内容 |
+|---|---|
+| [week01-02-总结](weekly/week01-02-总结.md) | Docker 与 Jenkins 阶段回顾 |
+| [week03-总结](weekly/week03-总结.md) | GitLab CI：四道门禁 + 8 条踩坑 |
+| [week04-总结](weekly/week04-总结.md) | K8s 部署：探针假滚动对照 / 回滚双通道 / CI 接入 / 7 条踩坑 |
 
 ---
 
