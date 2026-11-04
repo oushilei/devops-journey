@@ -51,6 +51,7 @@
 | [Week3-Jenkins与GitLabCI对比](notes/Week3-Jenkins与GitLabCI对比.md) | 三个真实差异 + 各自短板 + 选型 |
 | [Week4-D3-回滚与ReplicaSet](notes/Week4-D3-回滚与ReplicaSet.md) | rollout undo / --to-revision / RS 编号重排机制 |
 | [Week4-D4-回滚窗口与CI部署K8s](notes/Week4-D4-回滚窗口与CI部署K8s.md) | 回滚窗口实测 / 双通道回滚 / 坏镜像探针拦截 / 三个 CI 真实故障 |
+| [Week5-D1-Prometheus与metrics本质](notes/Week5-D1-Prometheus与metrics本质.md) | metrics 文本格式 / 时间序列 / pull 模型 / up 的真实含义 / inode 坑 |
 | [K8s实验自测与要点](notes/K8s实验自测与要点.md) | 主节点删除与重新加入实验记录 |
 | [Git常用命令速查](notes/Git常用命令速查.md) | 日常命令 + 排错速查 |
 
