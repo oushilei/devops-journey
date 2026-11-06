@@ -569,7 +569,7 @@ kubectl get rs -o custom-columns='NAME:.metadata.name,REV:.metadata.annotations.
 
 ---
 
-## 九、技术要点（面试用）
+## 九、技术要点
 
 > "回滚能力 = 副本为 0 的 RS 还剩几个，这个窗口由 `revisionHistoryLimit` 决定，而且会随发布次数持续缩小——limit=1 时每发一版就缩一格。清理是按 revision 号排的，不是按创建时间。
 >
