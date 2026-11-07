@@ -231,8 +231,76 @@ Grafana 自己也能配告警，但生产上大多仍走 Prometheus + Alertmanag
 
 ---
 
-## 七、待办
+## 七、K8s 指标（补回 W5 计划）
 
-- [ ] 把 `job_name: 'dead-target'` 改成 `job_name: 'node'`（实验残留，命名要见名知意）
+> 原第一版计划的 D3 曾被砍掉，2026-11-07 按用户要求重新加回。
+> **但按「够用」口径实现**：不部署 `kube-state-metrics`（国内镜像源实测全部拉不到），
+> 改用 K8s 自带的 **cAdvisor** 指标——零部署、零额外组件。
+
+### 7.1 为什么需要它
+
+`node_exporter` 只看**机器**（CPU 6.5%、内存 85%），它完全看不到 Pod。
+有了 K8s 指标才能回答：**哪个 Pod 在吃资源、哪个容器重启过、每个 Pod 用了多少内存**。
+
+### 7.2 两个组件的分工
+
+| 组件 | 提供什么 | 本机是否可用 |
+|---|---|---|
+| **cAdvisor**（kubelet 内置） | 容器级 CPU / 内存 / 网络 / 磁盘 | ✅ 已有，1761 条 `container_*` 指标 |
+| `kube-state-metrics`（需额外部署） | Deployment 副本数、Pod 状态、重启次数 | ❌ 镜像源拉不到，暂不做 |
+
+> 结论：本机先用 cAdvisor 覆盖「容器资源」，对象状态类指标以后镜像源解决了再补。
+
+### 7.3 采集路径
+
+cAdvisor 的 `/metrics/cadvisor` 在 kubelet 的 10250 端口上，**需要认证**（实测 401）。
+所以走 **apiserver proxy**，用一个只读 ServiceAccount 的 token：
+
+```
+Prometheus → https://192.168.245.133:6443
+             /api/v1/nodes/k8s-node1/proxy/metrics/cadvisor
+             Authorization: Bearer <token>
+```
+
+**凭据准备**（已配置好）：
+
+| 项 | 值 |
+|---|---|
+| ServiceAccount | `prometheus-k8s`（namespace default） |
+| ClusterRole | 只给 `nodes/proxy`、`nodes/metrics` 的 `get` |
+| token 文件 | `/opt/prometheus/k8s.token`，挂进容器为 `/etc/prometheus/k8s.token` |
+| 验证 | 带 token 请求返回 **200** |
+
+**为什么不直接抓 10250**：那要 kubelet 的客户端证书，比 apiserver proxy 麻烦；而且 proxy 走的是 K8s 标准 RBAC，权限可控。
+
+### 7.4 要加的 scrape job
+
+```yaml
+  - job_name: 'k8s-cadvisor'
+    scheme: https
+    metrics_path: /api/v1/nodes/k8s-node1/proxy/metrics/cadvisor
+    bearer_token_file: /etc/prometheus/k8s.token
+    tls_config:
+      insecure_skip_verify: true
+    static_configs:
+      - targets: ['192.168.245.133:6443']
+```
+
+**注意**：`metrics_path` 里写死了 `k8s-node1`，只抓这一个节点。
+生产上会用 `kubernetes_sd_configs` 自动发现所有节点——那属于平台团队的活，当前不学。
+
+### 7.5 验收
+
+```
+/targets 里出现 k8s-cadvisor = UP
+Prometheus 能查到 container_memory_working_set_bytes{pod="hello-..."}
+```
+
+---
+
+## 八、待办
+
+- [ ] 把 `job_name: 'dead-target'` 改成 `job_name: 'node'`（**已完成**，配置文件里已是 `node`）
+- [ ] 接上 K8s cAdvisor 指标（本节，进行中）
 - [ ] 补一条简单告警规则并真的触发一次
 - [ ] Shell 每日 1 题（基础能力，优先级高于复杂查询）

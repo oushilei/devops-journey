@@ -27,7 +27,7 @@
 | W2 | Jenkins | ✅ 完成 | DooD 容器内构建；Jenkinsfile 六大语法；凭据管理；参数化 + poll SCM 自动触发 |
 | W3 | GitLab CI | ✅ 完成 | 自建 GitLab CE + Runner；stages / rules / artifacts / cache 四实验；镜像构建与私有 registry；四道生产门禁（单测、制品不可变、manual 审批、一键回滚） |
 | W4 | K8s 部署 | ✅ 完成 | Deployment / Service / 探针（假滚动对照实测）/ 滚动更新 / 双通道回滚 / CI 操作 Deployment（受限 SA） |
-| W5 | Prometheus | ⏳ 进行中 | 监控栈 + 告警规则 |
+| W5 | Prometheus | ⏳ 进行中 | Grafana 看板（1860）/ 排错速查表 / K8s cAdvisor 指标 / 告警规则 |
 | W6 | 全链路整合 | ⬜ 待开始 | 完整 CI/CD + 监控链路 |
 
 ---
