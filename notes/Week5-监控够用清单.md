@@ -231,30 +231,63 @@ Grafana 自己也能配告警，但生产上大多仍走 Prometheus + Alertmanag
 
 ---
 
-## 七、K8s 指标（补回 W5 计划）
+## 七、K8s 指标（补回 W5 计划，已完成）
 
 > 原第一版计划的 D3 曾被砍掉，2026-11-07 按用户要求重新加回。
-> **但按「够用」口径实现**：不部署 `kube-state-metrics`（国内镜像源实测全部拉不到），
-> 改用 K8s 自带的 **cAdvisor** 指标——零部署、零额外组件。
+> **两个数据源都接齐了**：cAdvisor（容器资源）+ kube-state-metrics（对象状态）。
 
 ### 7.1 为什么需要它
 
-`node_exporter` 只看**机器**（CPU 6.5%、内存 85%），它完全看不到 Pod。
-有了 K8s 指标才能回答：**哪个 Pod 在吃资源、哪个容器重启过、每个 Pod 用了多少内存**。
+`node_exporter` 只看**机器**（CPU 6.5%、内存 85%），完全看不到 Pod。
+有了 K8s 指标才能回答：哪个 Pod 在吃资源、哪个 Pod 一直重启、副本有没有到位。
 
-### 7.2 两个组件的分工
+### 7.2 三个数据源的分工
 
-| 组件 | 提供什么 | 本机是否可用 |
-|---|---|---|
-| **cAdvisor**（kubelet 内置） | 容器级 CPU / 内存 / 网络 / 磁盘 | ✅ 已有，1761 条 `container_*` 指标 |
-| `kube-state-metrics`（需额外部署） | Deployment 副本数、Pod 状态、重启次数 | ❌ 镜像源拉不到，暂不做 |
+| 组件 | 数据来自 | 提供什么 | 本机状态 |
+|---|---|---|---|
+| `node_exporter` | 宿主机 `/proc` | 机器级 CPU / 内存 / 磁盘 | ✅ 9100，943 样本 |
+| **cAdvisor** | kubelet（内置） | 容器级 CPU / 内存 / 网络 / 磁盘 | ✅ 1761 条 `container_*` |
+| **kube-state-metrics** | apiserver | Deployment 副本数、Pod 状态、**重启次数** | ✅ 18080，1102 条 `kube_*` |
 
-> 结论：本机先用 cAdvisor 覆盖「容器资源」，对象状态类指标以后镜像源解决了再补。
+> cAdvisor 回答「用了多少资源」，kube-state-metrics 回答「对象现在什么状态」。
+> **W4 做的探针 / `RESTARTS 2` / `CrashLoopBackOff` / 副本 `0/1`，只有后者能变成指标。**
 
-### 7.3 采集路径
+### 7.3 kube-state-metrics 部署
 
-cAdvisor 的 `/metrics/cadvisor` 在 kubelet 的 10250 端口上，**需要认证**（实测 401）。
-所以走 **apiserver proxy**，用一个只读 ServiceAccount 的 token：
+镜像在国内源的正确地址（**不是** `docker.m.daocloud.io` 拼 registry.k8s.io 路径）：
+
+```bash
+docker pull m.daocloud.io/registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.9.2
+docker tag <上面那个> registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.9.2
+```
+
+> 曾用 8 个地址都失败，原因是一直用 `docker.m.daocloud.io` 前缀拼 K8s 官方仓库路径。
+> 正确映射域名是 **`m.daocloud.io/registry.k8s.io/...`** 或 `k8s.m.daocloud.io/...`。
+
+正式启动命令（8080 被 W2 的 Jenkins 占用，所以映射到 18080/18081）：
+
+```bash
+docker run -d --name kube-state-metrics --restart always \
+  -p 18080:8080 -p 18081:8081 \
+  -v /opt/prometheus/ksm-kubeconfig:/etc/ksm/kubeconfig:ro \
+  --memory=150m \
+  registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.9.2 \
+  --kubeconfig=/etc/ksm/kubeconfig \
+  --port=8080 --telemetry-port=8081 \
+  --resources=pods,deployments,replicasets,services,endpoints,nodes,namespaces,...
+```
+
+**`--resources` 必须限制**：不写的话它默认 watch 所有对象类型，会刷一堆 `Forbidden` 日志。
+限制到有权限的类型后，实测日志无 Forbidden。
+
+**RBAC**：复用 `prometheus-k8s` 这个 ServiceAccount，把 ClusterRole 扩成
+`pods/deployments/replicasets/services/endpoints/nodes/...` 的 `get/list/watch`。
+kubeconfig 写到 `/opt/prometheus/ksm-kubeconfig`，内置 CA + token。
+
+### 7.4 cAdvisor 采集路径
+
+cAdvisor 的 `/metrics/cadvisor` 在 kubelet 10250 端口，**需要认证**（实测 401）。
+所以走 **apiserver proxy**，用只读 SA 的 token：
 
 ```
 Prometheus → https://192.168.245.133:6443
@@ -262,20 +295,27 @@ Prometheus → https://192.168.245.133:6443
              Authorization: Bearer <token>
 ```
 
-**凭据准备**（已配置好）：
-
 | 项 | 值 |
 |---|---|
-| ServiceAccount | `prometheus-k8s`（namespace default） |
-| ClusterRole | 只给 `nodes/proxy`、`nodes/metrics` 的 `get` |
-| token 文件 | `/opt/prometheus/k8s.token`，挂进容器为 `/etc/prometheus/k8s.token` |
-| 验证 | 带 token 请求返回 **200** |
+| token 文件 | `/opt/prometheus/k8s.token` → 容器内 `/etc/prometheus/k8s.token` |
+| 权限 | 属主 `65534:65534` + `600`（容器以 nobody 运行，**不能设成 600 root**） |
+| 验证 | 带 token 请求返回 200 |
 
-**为什么不直接抓 10250**：那要 kubelet 的客户端证书，比 apiserver proxy 麻烦；而且 proxy 走的是 K8s 标准 RBAC，权限可控。
+**权限坑**：容器以 `nobody(65534)` 跑，token 若设成 `-rw------- root root`，容器内读不到。
+`chmod 644` 虽能读但宿主机任何人可见 token，正确做法是 `chown 65534:65534` + `600`。
 
-### 7.4 要加的 scrape job
+### 7.5 完整 scrape 配置
 
 ```yaml
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'node'
+    static_configs:
+      - targets: ['192.168.245.150:9100']
   - job_name: 'k8s-cadvisor'
     scheme: https
     metrics_path: /api/v1/nodes/k8s-node1/proxy/metrics/cadvisor
@@ -284,23 +324,64 @@ Prometheus → https://192.168.245.133:6443
       insecure_skip_verify: true
     static_configs:
       - targets: ['192.168.245.133:6443']
+  - job_name: 'kube-state-metrics'
+    static_configs:
+      - targets: ['192.168.245.150:18080']
 ```
 
-**注意**：`metrics_path` 里写死了 `k8s-node1`，只抓这一个节点。
-生产上会用 `kubernetes_sd_configs` 自动发现所有节点——那属于平台团队的活，当前不学。
+**注意**：`metrics_path` 写死 `k8s-node1`，只抓一个节点。生产用 `kubernetes_sd_configs`
+自动发现所有节点——那属于平台团队的活，当前不学。
 
-### 7.5 验收
+**改配置前先校验**（避免 reload 才报错）：
 
+```bash
+docker exec prometheus promtool check config /etc/prometheus/prometheus.yml
+curl -X POST http://localhost:9090/-/reload
 ```
-/targets 里出现 k8s-cadvisor = UP
-Prometheus 能查到 container_memory_working_set_bytes{pod="hello-..."}
-```
+
+### 7.6 实测验收（2026-11-07）
+
+| 检查 | 结果 |
+|---|---|
+| `promtool check config` | `SUCCESS` |
+| `reload` | `HTTP=200` |
+| 四个 target | `k8s-cadvisor` / `kube-state-metrics` / `node` / `prometheus` 全 **up** |
+| `kube_deployment_status_replicas_available{deployment="hello"}` | **`2`** |
+| `kube_pod_container_status_restarts_total{namespace="default"}` | **`3`**（W4 坏镜像实验留下的） |
+| `curl 18080/metrics \| grep -c '^kube_'` | **1102** |
+
+### 7.7 Grafana 看板
+
+| ID | 名称 | 说明 |
+|---|---|---|
+| **1860** | Node Exporter Full | 机器监控，已导入 |
+| **7249** | Kubernetes Cluster | **K8s 总览，已导入** |
+
+**为什么选 7249**：对比过 6417（25 个指标本机只有 11 个）、13332（31 有 18）、8588（17 有 8），
+7249 依赖的 `node_*` + `container_*` + `kube_*` **本机三类全齐**，是唯一不会大面积空白的现成看板。
+
+**看板怎么读**（值班时只看这几块）：
+
+| 面板 | 看什么 |
+|---|---|
+| Pod Restarts | 时间窗内**新增**重启次数，应为 0 |
+| Pods Running Count | Failed / Pending 应为 0 |
+| Min Space / Min Mem | 磁盘、内存余量，逼近红线要处理 |
+| CPU Idle Avg / Memory | 看**曲线拐点**，不看绝对值 |
+
+**`N/A` / `No data` 不用修**：需要业务埋点或老指标改名，核心面板有数就够。
+判断某块面板算的是累计值还是增量：点标题 → **Edit** → 看 `expr`。
+
+> 例：`Pod Restarts = 0` 是**正确的**——它算的是"过去 30 分钟新增重启"，
+> 而 W4 那 3 次是两天前的，所以累计值 3、面板显示 0，两者不矛盾。
 
 ---
 
 ## 八、待办
 
-- [ ] 把 `job_name: 'dead-target'` 改成 `job_name: 'node'`（**已完成**，配置文件里已是 `node`）
-- [ ] 接上 K8s cAdvisor 指标（本节，进行中）
-- [ ] 补一条简单告警规则并真的触发一次
+- [x] 把 `job_name: 'dead-target'` 改成 `job_name: 'node'`
+- [x] 接上 K8s 指标：cAdvisor + kube-state-metrics（见第七节）
+- [x] 导入 Grafana 看板 1860（机器）+ 7249（K8s）
+- [ ] 补一条简单告警规则并真的触发一次（**W5 唯一剩下的实质内容**）
+- [ ] W5 周复盘 `week05-总结.md`，README 进度表标 ✅
 - [ ] Shell 每日 1 题（基础能力，优先级高于复杂查询）
