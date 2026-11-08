@@ -436,11 +436,79 @@ topk(5, sum(container_memory_usage_bytes{image!="", container!="POD"}) by (pod))
 
 ---
 
-## 八、待办
+## 八、告警规则（已完成）
+
+### 8.1 规则文件
+
+`/opt/prometheus/rules/basic.yml`：
+
+```yaml
+groups:
+  - name: basic
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.job }} 抓不到了"
+```
+
+| 字段 | 作用 |
+|---|---|
+| `expr: up == 0` | 条件：某个目标抓不到了 |
+| `for: 1m` | **持续 1 分钟才确认**，防止网络抖动误报 |
+| `labels.severity` | 级别标签，以后按级别路由 |
+| `annotations.summary` | 人看的说明，`{{ $labels.job }}` 自动填具体 job |
+
+### 8.2 挂进 Prometheus
+
+在 `prometheus.yml` **顶层**追加（与 `global` / `scrape_configs` 同级）：
+
+```yaml
+rule_files:
+  - /etc/prometheus/rules/*.yml
+```
+
+路径写**容器内**的 `/etc/prometheus/...`，不是宿主机 `/opt/prometheus/...`。
+
+```bash
+docker exec prometheus promtool check rules /etc/prometheus/rules/basic.yml
+docker exec prometheus promtool check config /etc/prometheus/prometheus.yml
+curl -X POST http://localhost:9090/-/reload
+```
+
+浏览器看：`http://192.168.245.150:9090/alerts`
+
+### 8.3 真的触发一次（已完成）
+
+```bash
+docker stop node-exporter     # --restart always 不会把手工 stop 的容器拉起来
+sleep 30                      # 状态 = Pending（观察期，不报）
+sleep 40                      # 跨过 for: 1m → Firing
+docker start node-exporter    # 恢复 → Inactive
+```
+
+**实测三段状态**：
+
+| 时刻 | 状态 | 含义 |
+|---|---|---|
+| 刚停 | Inactive → Pending | 条件满足，进入观察期 |
+| 30 秒 | **Pending** | `for: 1m` 未走完，不报 |
+| 70 秒 | **Firing(1)** | `instance=192.168.245.150:9100`，`job=node`，`value=0` |
+| 恢复后 | **Inactive(1)** | 告警清零，四个 target 全 up |
+
+> **今天不装 Alertmanager**：只做 Prometheus 侧规则 + 界面看状态。
+> 通知渠道（钉钉/邮件/短信）属于后续内容，不影响"告警规则"本身。
+
+---
+
+## 九、待办
 
 - [x] 把 `job_name: 'dead-target'` 改成 `job_name: 'node'`
 - [x] 接上 K8s 指标：cAdvisor + kube-state-metrics（见第七节）
 - [x] 导入 Grafana 看板 1860（机器）+ 7249（K8s）
-- [ ] 补一条简单告警规则并真的触发一次（**W5 唯一剩下的实质内容**）
-- [ ] W5 周复盘 `week05-总结.md`，README 进度表标 ✅
+- [x] 补一条简单告警规则并真的触发一次（见第八节，已实测 Firing）
+- [x] W5 周复盘 `week05-总结.md`，README 进度表标 ✅
 - [ ] Shell 每日 1 题（基础能力，优先级高于复杂查询）
