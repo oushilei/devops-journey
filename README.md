@@ -53,6 +53,7 @@
 | [Week4-D4-回滚窗口与CI部署K8s](notes/Week4-D4-回滚窗口与CI部署K8s.md) | 回滚窗口实测 / 双通道回滚 / 坏镜像探针拦截 / 三个 CI 真实故障 |
 | [Week5-D1-Prometheus与metrics本质](notes/Week5-D1-Prometheus与metrics本质.md) | metrics 文本格式 / 时间序列 / pull 模型 / up 的真实含义 / inode 坑 |
 | [Week5-监控够用清单](notes/Week5-监控够用清单.md) | 四个动作 + 看板怎么读 + 排错顺序（面向会用，不追究原理） |
+| [Week6-D1-端到端演练](notes/Week6-D1-端到端演练.md) | 六段链路实操 / 三层验证 / 带时间戳的实测记录 |
 | [K8s实验自测与要点](notes/K8s实验自测与要点.md) | 主节点删除与重新加入实验记录 |
 | [Git常用命令速查](notes/Git常用命令速查.md) | 日常命令 + 排错速查 |
 
