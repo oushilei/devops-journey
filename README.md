@@ -54,6 +54,8 @@
 | [Week5-D1-Prometheus与metrics本质](notes/Week5-D1-Prometheus与metrics本质.md) | metrics 文本格式 / 时间序列 / pull 模型 / up 的真实含义 / inode 坑 |
 | [Week5-监控够用清单](notes/Week5-监控够用清单.md) | 四个动作 + 看板怎么读 + 排错顺序（面向会用，不追究原理） |
 | [Week6-D1-端到端演练](notes/Week6-D1-端到端演练.md) | 六段链路实操 / 三层验证 / 带时间戳的实测记录 |
+| [Week6-D2-故障演练设计](notes/Week6-D2-故障演练设计.md) | 故障注入方式 / 安全边界 / 预计暴露的告警缺口 |
+| [Shell-每日1题记录](notes/Shell-每日1题记录.md) | 逐题记录、批改与可复用管道模式 |
 | [K8s实验自测与要点](notes/K8s实验自测与要点.md) | 主节点删除与重新加入实验记录 |
 | [Git常用命令速查](notes/Git常用命令速查.md) | 日常命令 + 排错速查 |
 
