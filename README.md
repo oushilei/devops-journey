@@ -28,7 +28,7 @@
 | W3 | GitLab CI | ✅ 完成 | 自建 GitLab CE + Runner；stages / rules / artifacts / cache 四实验；镜像构建与私有 registry；四道生产门禁（单测、制品不可变、manual 审批、一键回滚） |
 | W4 | K8s 部署 | ✅ 完成 | Deployment / Service / 探针（假滚动对照实测）/ 滚动更新 / 双通道回滚 / CI 操作 Deployment（受限 SA） |
 | W5 | Prometheus | ✅ 完成 | Grafana 看板（1860 + 7249）/ 排错速查表 / K8s 指标（cAdvisor + kube-state-metrics）/ 告警规则（实测 Firing→恢复） |
-| W6 | 全链路整合 | ⬜ 待开始 | 完整 CI/CD + 监控链路 |
+| W6 | 全链路整合 | ✅ 完成 | 端到端六段链路 / 故障演练（探针拦截+告警缺口+回滚）/ 六周总盘点 |
 
 ---
 
@@ -78,6 +78,7 @@ CI/CD 与容器化部署架构图。
 | [week03-总结](weekly/week03-总结.md) | GitLab CI：四道门禁 + 8 条踩坑 |
 | [week04-总结](weekly/week04-总结.md) | K8s 部署：探针假滚动对照 / 回滚双通道 / CI 接入 / 7 条踩坑 |
 | [week05-总结](weekly/week05-总结.md) | 监控：Grafana 看板 / K8s 指标 / 告警触发 / 11 条踩坑 |
+| [week06-总结](weekly/week06-总结.md) | 全链路整合 + 故障演练 + W1~W6 总盘点（能力/数据/薄弱点） |
 
 ---
 
