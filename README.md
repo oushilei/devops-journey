@@ -17,6 +17,14 @@
 
 配套项目仓库：[oushilei/devops-demo](https://github.com/oushilei/devops-demo)（Go HTTP 服务 + 多阶段构建 + 流水线）
 
+### 全链路架构
+
+![DevOps 全链路架构](docs/architecture.svg)
+
+> 四层：代码提交 → CI 流水线 → K8s 部署 → 观测告警。
+> 全链路只有 2 个人工点（deploy ▶ / rollback ▶），其余全是机器。
+> 图的逐层讲解与可复述表述见 [Week7-D2-全链路架构图](notes/Week7-D2-全链路架构图.md)。
+
 ---
 
 ## 进度
@@ -29,6 +37,7 @@
 | W4 | K8s 部署 | ✅ 完成 | Deployment / Service / 探针（假滚动对照实测）/ 滚动更新 / 双通道回滚 / CI 操作 Deployment（受限 SA） |
 | W5 | Prometheus | ✅ 完成 | Grafana 看板（1860 + 7249）/ 排错速查表 / K8s 指标（cAdvisor + kube-state-metrics）/ 告警规则（实测 Firing→恢复） |
 | W6 | 全链路整合 | ✅ 完成 | 端到端六段链路 / 故障演练（探针拦截+告警缺口+回滚）/ 六周总盘点 |
+| W7 | 产出与表达 | ⏳ 进行中 | 全链路架构图（四层分区）/ 1 分钟可复述版本 / 高频追问答法 |
 
 ---
 
@@ -56,6 +65,7 @@
 | [Week6-D1-端到端演练](notes/Week6-D1-端到端演练.md) | 六段链路实操 / 三层验证 / 带时间戳的实测记录 |
 | [Week6-D2-故障演练设计](notes/Week6-D2-故障演练设计.md) | 故障注入方式 / 安全边界 / 预计暴露的告警缺口 |
 | [Week6-D2-完整故障演练](notes/Week6-D2-完整故障演练.md) | 事故时间线 / 探针拦截 / 告警缺口与补规则 / 回滚恢复 |
+| [Week7-D2-全链路架构图](notes/Week7-D2-全链路架构图.md) | 四层分区讲解 / 两个人工点 / 1 分钟可复述版本 / 5 个高频追问 |
 | [Shell-每日1题记录](notes/Shell-每日1题记录.md) | 逐题记录、批改与可复用管道模式 |
 | [K8s实验自测与要点](notes/K8s实验自测与要点.md) | 主节点删除与重新加入实验记录 |
 | [Git常用命令速查](notes/Git常用命令速查.md) | 日常命令 + 排错速查 |

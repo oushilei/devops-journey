@@ -1,0 +1,178 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 840" width="1280" height="840" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arY" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ca8a04"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1280" height="840" fill="#ffffff"/>
+
+  <!-- 标题 -->
+  <text x="24" y="42" font-size="24" font-weight="700" fill="#0f172a">DevOps 全链路架构 · 从代码提交到告警触发</text>
+  <text x="24" y="68" font-size="12.5" fill="#64748b">个人实验环境：2 台 CentOS 7 虚拟机（master 192.168.245.133 / node1 192.168.245.150）· 无真实流量</text>
+
+  <!-- 图例 -->
+  <rect x="880" y="26" width="16" height="16" rx="3" fill="#fef9c3" stroke="#fde047" stroke-width="1.5"/>
+  <text x="904" y="39" font-size="12" fill="#475569">人工操作点（全链路只有 2 处）</text>
+
+  <!-- ============ BAND 1 ============ -->
+  <rect x="24" y="95" width="118" height="108" rx="10" fill="#f1f5f9" stroke="#e2e8f0"/>
+  <text x="83" y="142" font-size="15" font-weight="700" fill="#334155" text-anchor="middle">① 代码提交</text>
+  <text x="83" y="164" font-size="11" fill="#64748b" text-anchor="middle">人写代码</text>
+
+  <rect x="152" y="95" width="1104" height="108" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+
+  <rect x="176" y="119" width="240" height="68" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.6"/>
+  <text x="296" y="145" font-size="14" font-weight="600" fill="#1e3a8a" text-anchor="middle">本地 Git 仓库</text>
+  <text x="296" y="165" font-size="11" fill="#3b82f6" text-anchor="middle">Windows · 唯一手写代码的地方</text>
+
+  <line x1="420" y1="153" x2="512" y2="153" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+  <text x="466" y="145" font-size="10.5" fill="#64748b" text-anchor="middle">git push</text>
+
+  <rect x="520" y="119" width="250" height="68" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.6"/>
+  <text x="645" y="145" font-size="14" font-weight="600" fill="#1e3a8a" text-anchor="middle">GitLab CE（自建）</text>
+  <text x="645" y="165" font-size="11" fill="#3b82f6" text-anchor="middle">192.168.245.150:80 · 兼 CI 调度器</text>
+
+  <text x="812" y="142" font-size="12" fill="#475569">push 事件由 GitLab 自己产生</text>
+  <text x="812" y="164" font-size="12" fill="#475569">→ 自动生成 pipeline，无需人工触发</text>
+
+  <path d="M 645 187 V 216 H 276 V 246" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+  <text x="470" y="212" font-size="10.5" fill="#64748b" text-anchor="middle">触发流水线</text>
+
+  <!-- ============ BAND 2 ============ -->
+  <rect x="24" y="222" width="118" height="145" rx="10" fill="#f5f3ff" stroke="#e9e5ff"/>
+  <text x="83" y="283" font-size="15" font-weight="700" fill="#4c1d95" text-anchor="middle">② CI 流水线</text>
+  <text x="83" y="305" font-size="11" fill="#7c3aed" text-anchor="middle">机器全自动</text>
+
+  <rect x="152" y="222" width="1104" height="145" rx="10" fill="#faf8ff" stroke="#e9e5ff"/>
+
+  <rect x="176" y="252" width="200" height="72" rx="8" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.6"/>
+  <text x="276" y="280" font-size="13.5" font-weight="600" fill="#4c1d95" text-anchor="middle">GitLab Runner</text>
+  <text x="276" y="299" font-size="10.5" fill="#7c3aed" text-anchor="middle">node1 · shell executor</text>
+  <text x="276" y="315" font-size="10.5" fill="#7c3aed" text-anchor="middle">systemd 常驻服务</text>
+
+  <line x1="376" y1="276" x2="404" y2="268" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <rect x="410" y="240" width="100" height="44" rx="6" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+  <text x="460" y="267" font-size="12.5" font-weight="600" fill="#4c1d95" text-anchor="middle">build</text>
+
+  <line x1="510" y1="262" x2="528" y2="262" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <rect x="532" y="240" width="100" height="44" rx="6" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+  <text x="582" y="267" font-size="12.5" font-weight="600" fill="#4c1d95" text-anchor="middle">test</text>
+
+  <line x1="632" y1="262" x2="650" y2="262" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <rect x="654" y="240" width="100" height="44" rx="6" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+  <text x="704" y="267" font-size="12.5" font-weight="600" fill="#4c1d95" text-anchor="middle">package</text>
+
+  <line x1="754" y1="262" x2="872" y2="262" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+  <text x="813" y="253" font-size="10.5" fill="#64748b" text-anchor="middle">docker push</text>
+
+  <rect x="880" y="234" width="200" height="56" rx="8" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.6"/>
+  <text x="980" y="257" font-size="13" font-weight="600" fill="#4c1d95" text-anchor="middle">私有 Registry</text>
+  <text x="980" y="276" font-size="10.5" fill="#7c3aed" text-anchor="middle">:5000 · tag = commit sha</text>
+
+  <line x1="704" y1="284" x2="704" y2="301" stroke="#ca8a04" stroke-width="1.8" marker-end="url(#arY)"/>
+
+  <rect x="654" y="305" width="100" height="44" rx="6" fill="#fef9c3" stroke="#fde047" stroke-width="1.6"/>
+  <text x="704" y="323" font-size="12" font-weight="600" fill="#713f12" text-anchor="middle">deploy ▶</text>
+  <text x="704" y="337" font-size="9.5" fill="#a16207" text-anchor="middle">manual</text>
+  <text x="768" y="331" font-size="10.5" fill="#a16207">→ 修改 Deployment（见 ③）</text>
+
+  <text x="176" y="355" font-size="11.5" fill="#475569">门禁：① 单测不过即中断　② 制品 tag 不可变（已存在不覆盖）　③ deploy 需人工点 ▶　④ 回滚可指定 TARGET_TAG</text>
+
+  <!-- ============ BAND 3 ============ -->
+  <rect x="24" y="379" width="118" height="190" rx="10" fill="#ecfdf5" stroke="#d1fae5"/>
+  <text x="83" y="458" font-size="15" font-weight="700" fill="#065f46" text-anchor="middle">③ K8s 部署</text>
+  <text x="83" y="480" font-size="11" fill="#059669" text-anchor="middle">声明式调谐</text>
+
+  <rect x="152" y="379" width="1104" height="190" rx="10" fill="#f6fefb" stroke="#d1fae5"/>
+
+  <text x="176" y="400" font-size="11" fill="#475569">↑ deploy-job 执行 kubectl set image（改的是 etcd 里的 spec，不是直接动 Pod）</text>
+  <text x="176" y="416" font-size="11" fill="#475569">身份 = 受限 SA ci-deployer，只能改 Deployment，删不掉、进不了 kube-system</text>
+
+  <rect x="176" y="430" width="200" height="70" rx="8" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.6"/>
+  <text x="276" y="457" font-size="13" font-weight="600" fill="#065f46" text-anchor="middle">Deployment hello</text>
+  <text x="276" y="477" font-size="10.5" fill="#059669" text-anchor="middle">2 副本 · readiness + liveness</text>
+
+  <line x1="376" y1="465" x2="412" y2="465" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <rect x="420" y="440" width="150" height="50" rx="8" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.6"/>
+  <text x="495" y="470" font-size="12.5" font-weight="600" fill="#065f46" text-anchor="middle">ReplicaSet</text>
+
+  <line x1="570" y1="465" x2="612" y2="465" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <rect x="620" y="425" width="180" height="80" rx="8" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.6"/>
+  <text x="710" y="451" font-size="13" font-weight="600" fill="#065f46" text-anchor="middle">Pod × 2</text>
+  <text x="710" y="468" font-size="10.5" fill="#059669" text-anchor="middle">10.244.x.x:80（flannel）</text>
+  <text x="710" y="486" font-size="10.5" fill="#059669" text-anchor="middle">镜像 :5000/devops/hello:sha</text>
+
+  <line x1="860" y1="465" x2="808" y2="465" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+  <text x="834" y="456" font-size="10" fill="#64748b" text-anchor="middle">流量</text>
+
+  <rect x="860" y="435" width="180" height="60" rx="8" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.6"/>
+  <text x="950" y="461" font-size="12.5" font-weight="600" fill="#065f46" text-anchor="middle">Service（NodePort）</text>
+  <text x="950" y="480" font-size="10.5" fill="#059669" text-anchor="middle">:30863 → endpoints</text>
+
+  <line x1="1084" y1="465" x2="1046" y2="465" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <rect x="1090" y="440" width="140" height="50" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.6"/>
+  <text x="1160" y="470" font-size="12" font-weight="600" fill="#1e3a8a" text-anchor="middle">外部访问</text>
+
+  <text x="176" y="536" font-size="11.5" fill="#475569">探针不通过 → 新 Pod 不 Ready → 不进 endpoints → maxUnavailable: 0 保住旧 Pod → 外部 HTTP 全程 200</text>
+  <text x="176" y="556" font-size="11.5" fill="#475569">回滚两条通道：rollout undo（快，受 RS 历史限制）　/　指定 TARGET_TAG（不受历史限制，只要有制品就能退）</text>
+
+  <!-- ============ BAND 4 ============ -->
+  <rect x="24" y="581" width="118" height="225" rx="10" fill="#fff7ed" stroke="#ffedd5"/>
+  <text x="83" y="688" font-size="15" font-weight="700" fill="#9a3412" text-anchor="middle">④ 观测与告警</text>
+  <text x="83" y="710" font-size="11" fill="#ea580c" text-anchor="middle">只读，不干预</text>
+
+  <rect x="152" y="581" width="1104" height="225" rx="10" fill="#fffbf7" stroke="#ffedd5"/>
+
+  <rect x="176" y="620" width="220" height="44" rx="7" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="286" y="639" font-size="12" font-weight="600" fill="#9a3412" text-anchor="middle">node_exporter</text>
+  <text x="286" y="655" font-size="10" fill="#ea580c" text-anchor="middle">宿主机 /proc · :9100</text>
+
+  <rect x="176" y="676" width="220" height="44" rx="7" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="286" y="695" font-size="12" font-weight="600" fill="#9a3412" text-anchor="middle">cAdvisor</text>
+  <text x="286" y="711" font-size="10" fill="#ea580c" text-anchor="middle">kubelet 内置 · 经 apiserver proxy</text>
+
+  <rect x="176" y="732" width="220" height="44" rx="7" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="286" y="751" font-size="12" font-weight="600" fill="#9a3412" text-anchor="middle">kube-state-metrics</text>
+  <text x="286" y="767" font-size="10" fill="#ea580c" text-anchor="middle">apiserver 全量对象 · :18080</text>
+
+  <line x1="396" y1="642" x2="462" y2="672" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="396" y1="698" x2="462" y2="690" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="396" y1="754" x2="462" y2="710" stroke="#64748b" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <rect x="470" y="630" width="190" height="100" rx="8" fill="#fff7ed" stroke="#fdba74" stroke-width="1.8"/>
+  <text x="565" y="666" font-size="14" font-weight="600" fill="#9a3412" text-anchor="middle">Prometheus</text>
+  <text x="565" y="687" font-size="10.5" fill="#ea580c" text-anchor="middle">:9090 · TSDB</text>
+  <text x="565" y="705" font-size="10.5" fill="#ea580c" text-anchor="middle">每 15 秒拉一次</text>
+  <text x="565" y="721" font-size="10.5" fill="#ea580c" text-anchor="middle">照单全收，不做判断</text>
+
+  <line x1="660" y1="660" x2="712" y2="650" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+  <line x1="660" y1="704" x2="712" y2="740" stroke="#64748b" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <rect x="720" y="620" width="170" height="64" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="805" y="645" font-size="13" font-weight="600" fill="#9a3412" text-anchor="middle">Grafana</text>
+  <text x="805" y="665" font-size="10.5" fill="#ea580c" text-anchor="middle">:3000 · 看板 1860 / 7249</text>
+
+  <rect x="720" y="712" width="170" height="64" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+  <text x="805" y="737" font-size="13" font-weight="600" fill="#9a3412" text-anchor="middle">告警规则</text>
+  <text x="805" y="757" font-size="10" fill="#ea580c" text-anchor="middle">TargetDown / PodNotReady</text>
+
+  <circle cx="908" cy="744" r="6" fill="#dc2626"/>
+  <text x="920" y="748" font-size="11" fill="#b91c1c" font-weight="600">Firing</text>
+
+  <text x="960" y="640" font-size="11.5" fill="#475569">采集是照单全收，判断在规则里。</text>
+  <text x="960" y="662" font-size="11.5" fill="#475569">kube-state-metrics 列的是控制面「全量对象」，</text>
+  <text x="960" y="684" font-size="11.5" fill="#475569">与 endpoints（只挂 Ready 的 Pod）是两套东西 ——</text>
+  <text x="960" y="706" font-size="11.5" fill="#475569">所以旧 Pod 撑着流量时，坏 Pod 照样被记录。</text>
+  <text x="960" y="736" font-size="11.5" fill="#b91c1c">这正是 D2 演练暴露的缺口：target 全 up，</text>
+  <text x="960" y="758" font-size="11.5" fill="#b91c1c">故障真实存在，却没有任何告警会响。</text>
+</svg>
